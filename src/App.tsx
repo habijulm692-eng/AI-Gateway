@@ -13,8 +13,16 @@ import { AIProvider, ClientApiKey, GatewayLog, GatewaySettings } from './types/g
 import { fetchProviders, fetchLogs, fetchSettings, fetchClientKeys } from './services/api';
 import { MessageSquareCode, Sparkles, ChevronUp, X, Key } from 'lucide-react';
 
+const VALID_TABS = ['overview', 'chat', 'keys', 'providers', 'pipeline', 'logs', 'playground', 'settings', 'export'];
+
+function getTabFromUrl(): string {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.replace(/^#\/?/, '').trim().toLowerCase();
+  return VALID_TABS.includes(hash) ? hash : 'overview';
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [activeTab, setActiveTabState] = useState<string>(getTabFromUrl);
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [clientKeys, setClientKeys] = useState<ClientApiKey[]>([]);
   const [logs, setLogs] = useState<GatewayLog[]>([]);
@@ -27,6 +35,30 @@ export default function App() {
   // Floating widget states
   const [isFloatingChatOpen, setIsFloatingChatOpen] = useState<boolean>(false);
   const [isFloatingChatMaximized, setIsFloatingChatMaximized] = useState<boolean>(false);
+
+  // Sync tab with URL hash so back/forward and bookmarks work
+  const setActiveTab = useCallback((tab: string) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      const targetHash = tab === 'overview' ? '' : `#${tab}`;
+      if (window.location.hash !== targetHash) {
+        window.history.pushState(null, '', targetHash || window.location.pathname);
+      }
+    }
+  }, []);
+
+  // Listen to browser Back / Forward buttons and URL hash changes
+  useEffect(() => {
+    const onHashChange = () => {
+      setActiveTabState(getTabFromUrl());
+    };
+    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('popstate', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('popstate', onHashChange);
+    };
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
