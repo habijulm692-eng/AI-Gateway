@@ -112,7 +112,7 @@ export const ProvidersList: React.FC<ProvidersListProps> = ({
       protocol: formProtocol,
       enabled: editingProvider ? editingProvider.enabled : true,
       customHeaders: parsedHeaders,
-      models: editingProvider ? editingProvider.models : [],
+      models: editingProvider?.models || [],
       createdAt: editingProvider ? editingProvider.createdAt : Date.now(),
       updatedAt: Date.now(),
     };
@@ -379,7 +379,7 @@ export const ProvidersList: React.FC<ProvidersListProps> = ({
                       setAddingModelToProviderId(provider.id);
                       setNewModelId('');
                       setNewModelName('');
-                      setNewModelPriority(provider.models.length + 1);
+                      setNewModelPriority((provider.models || []).length + 1);
                       setNewModelContext(128000);
                       setNewModelNotes('');
                     }}
@@ -392,7 +392,7 @@ export const ProvidersList: React.FC<ProvidersListProps> = ({
 
                 {/* Models List */}
                 <div className="space-y-2">
-                  {provider.models.map((mod) => (
+                  {(provider.models || []).map((mod) => (
                     <div
                       key={mod.id}
                       className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
@@ -471,7 +471,7 @@ export const ProvidersList: React.FC<ProvidersListProps> = ({
                     </div>
                   ))}
 
-                  {provider.models.length === 0 && (
+                  {(!provider.models || provider.models.length === 0) && (
                     <div className="text-center py-4 text-xs text-slate-500">
                       No models registered under this provider yet.
                     </div>
