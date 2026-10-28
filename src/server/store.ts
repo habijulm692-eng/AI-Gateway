@@ -285,8 +285,16 @@ export async function getGatewayData(forceRefresh = false): Promise<DatabaseData
           for (const [pId, pVal] of Object.entries(fbData.providers as Record<string, any>)) {
             if (pVal) {
               const localKey = mergedProviders[pId]?.apiKey;
+              const rawModels = pVal.models || mergedProviders[pId]?.models || [];
+              const normalizedModels = Array.isArray(rawModels)
+                ? rawModels.filter(Boolean)
+                : typeof rawModels === 'object'
+                ? Object.values(rawModels).filter(Boolean)
+                : [];
+
               mergedProviders[pId] = {
                 ...pVal,
+                models: normalizedModels,
                 apiKey: pVal.apiKey || localKey || '',
               };
             }
@@ -302,6 +310,17 @@ export async function getGatewayData(forceRefresh = false): Promise<DatabaseData
       }
     } catch (err) {
       console.warn('Firebase RTDB unreachable, using local store:', err);
+    }
+  }
+
+  // Ensure every provider has a valid models array
+  for (const prov of Object.values(data.providers || {})) {
+    if (prov) {
+      if (!Array.isArray(prov.models)) {
+        prov.models = prov.models && typeof prov.models === 'object'
+          ? Object.values(prov.models).filter(Boolean)
+          : [];
+      }
     }
   }
 
