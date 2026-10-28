@@ -57,10 +57,10 @@ export const Playground: React.FC<PlaygroundProps> = ({
   // Extract all active models across active providers
   const activeModels: Array<{ id: string; name: string; providerName: string; priority: number }> = [];
   providers
-    .filter((p) => p.enabled)
+    .filter((p) => p && p.enabled)
     .forEach((p) => {
-      p.models
-        .filter((m) => m.enabled)
+      (p.models || [])
+        .filter((m) => m && m.enabled)
         .forEach((m) => {
           activeModels.push({
             id: m.id,
